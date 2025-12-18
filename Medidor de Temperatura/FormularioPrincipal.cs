@@ -13,10 +13,14 @@ namespace Medidor_de_Temperatura
 
         private List<double> ValoresDeTemperatura;
         private List<double> ValoresDeTempo;
+        private List<String> ValoresDateTime;
 
         private int contadorDeSegundos = 1;
         private string nomeDoArquivo = "";
         private string diretorioDoArquivo = "";
+        private int intervalo = 5000; // Equivale a 5 segundos
+        private string diretorio = "";
+        private bool ativo = false;
 
         #endregion Propriedades
 
@@ -29,9 +33,10 @@ namespace Medidor_de_Temperatura
             InitializeComponent();
             ValoresDeTemperatura = new List<double>();
             ValoresDeTempo = new List<double>();
+            ValoresDateTime = new List<String>();
             _portaSerial = new SerialPort();
 
-            txtNomeDoArquivo.Text = $"Temperatura_{DataFormatada()}";
+            txtNomeDoArquivo.Text = NomeArquivo();
 
             MessageBox.Show("Para o funcionamento do software é necessário informar um diretório" +
                 " para salvar as aquisições de temperatura realizada e também conectar o arduino.", "Funcionamento do Software");
@@ -44,6 +49,49 @@ namespace Medidor_de_Temperatura
 
 
         #region Metodos
+
+        private string TransformarEmTempo(double Valor)
+        {
+
+            int Minutos = 0;
+            string MinutoString = "";
+            string SegundoString = "";
+            string TempoString = "";
+
+            Valor *= (intervalo / 1000);
+
+            if (Valor >= 60)
+            {
+                while (Valor >= 60)
+                {
+                    Valor -= 60;
+                    Minutos += 1;
+                }
+            }
+
+            if (Valor < 10)
+            {
+                SegundoString = "0" + Convert.ToString(Valor);
+            }
+
+            else
+            {
+                SegundoString = Convert.ToString(Valor);
+            }
+
+            if (Minutos < 10)
+            {
+                MinutoString = "0" + Convert.ToString(Minutos);
+            }
+            else
+            {
+                MinutoString = Convert.ToString(Minutos);
+            }
+
+            TempoString = MinutoString + ":" + SegundoString;
+
+            return TempoString;
+        }
 
 
         private void BtnExibirFormularioDoGraficoComFuncoes_Click(object sender, EventArgs e)
@@ -62,6 +110,8 @@ namespace Medidor_de_Temperatura
 
                 diretorioDoArquivo = _escolherPasta.SelectedPath;
                 txtDiretorioDefinidoDoArquivo.Text = diretorioDoArquivo;
+                diretorio = diretorioDoArquivo;
+
             }
         }
 
@@ -69,63 +119,156 @@ namespace Medidor_de_Temperatura
         {
             nomeDoArquivo = Convert.ToString(txtNomeDoArquivo.Text);
 
-            if (!string.IsNullOrEmpty(nomeDoArquivo))
+            if (string.IsNullOrEmpty(diretorioDoArquivo))
             {
-                MessageBox.Show($"  Nome do arquivo: {nomeDoArquivo} foi definido com sucesso.", "Nome do arquivo", MessageBoxButtons.OK);
+                MessageBox.Show($"Informe um diretório para o arquivo ser salvo.", "Diretorio do arquivo", MessageBoxButtons.OK);
+                return;
+            }
+
+            else if (!string.IsNullOrEmpty(nomeDoArquivo))
+            {
+                MessageBox.Show($"Nome do arquivo: {nomeDoArquivo} foi definido com sucesso.", "Nome do arquivo", MessageBoxButtons.OK);
                 txtNomeDoArquivo.Clear();
             }
             else
-                MessageBox.Show($"  Informe um nome para o arquivo.", "Nome do arquivo", MessageBoxButtons.OK);
+                MessageBox.Show($"Informe um nome para o arquivo.", "Nome do arquivo", MessageBoxButtons.OK);
         }
 
-        private void BtnFinalizarComunicacao_Click(object sender, EventArgs e)
+        private bool arquivoJaSalvo = false;
+
+        private void testeescrito()
         {
-            
+
+            if (arquivoJaSalvo)
+                return;
+
             try
             {
-                if (_portaSerial.IsOpen == true)
-                    _portaSerial.Write("d");
 
-                using (StreamWriter _escreverArquivo = new StreamWriter($@"{diretorioDoArquivo}\\{nomeDoArquivo}.txt"))
+                if (ValoresDeTemperatura.Count == 0 || string.IsNullOrEmpty(diretorioDoArquivo) || string.IsNullOrEmpty(nomeDoArquivo))
+                    return;
+
+                if (_portaSerial != null)
                 {
-                    for (int i = 0; i < ValoresDeTemperatura.Count; i++)
-                        _escreverArquivo.WriteLine($"{ValoresDeTemperatura[i]};{ValoresDeTempo[i]}\n");
+                    try
+                    {
+                        if (_portaSerial.IsOpen)
+                        {
+                            _portaSerial.DiscardInBuffer();
+                            _portaSerial.Write("d");
+                            ativo = false;
+                            Thread.Sleep(200);
+                            
+                        }
+                    }
+                    catch (IOException) { }
+                    catch (UnauthorizedAccessException) { }
+                    catch (InvalidOperationException) { }
                 }
 
-                diretorioDoArquivo = string.Empty;
+                using (StreamWriter _escreverArquivo = new StreamWriter($@"{diretorioDoArquivo}\{nomeDoArquivo}.txt"))
+                {
+                    for (int i = 0; i < ValoresDeTemperatura.Count; i++)
+                    {
+                        _escreverArquivo.WriteLine($"{ValoresDeTemperatura[i]};{TransformarEmTempo(ValoresDeTempo[i])}");
+                    }
+                }
+
+                MessageBox.Show($"Arquivo salvo com sucesso em:\n{diretorioDoArquivo}\\{nomeDoArquivo}.txt",
+                                "Salvamento concluído", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+
+                arquivoJaSalvo = true;
+
                 nomeDoArquivo = string.Empty;
                 ValoresDeTemperatura.Clear();
                 ValoresDeTempo.Clear();
                 contadorDeSegundos = 1;
 
+
+                if (_portaSerial != null && _portaSerial.IsOpen)
+                {
+                    try {
+                        _portaSerial.DataReceived -= IniciarLeituraPortaSerial;
+
+                        if (_portaSerial.IsOpen) { _portaSerial.Close(); }
+                            
+                    } 
+                    catch { }
+                }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao salvar arquivo: {ex.Message}",
+                                "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+
+
+
+        private void BtnFinalizarComunicacao_Click(object sender, EventArgs e)
+        {
+            txtNomeDoArquivo.Text = NomeArquivo();
+            ativo = false;
+            LimparGrafico();
+            testeescrito();
         }
 
         private void BtnIniciarAquisicao_Click(object sender, EventArgs e)
         {
-            
-            if (!string.IsNullOrEmpty(nomeDoArquivo) && !string.IsNullOrEmpty(diretorioDoArquivo))
+            int arquivo = 1;
+            int diretorio = 1;
+            int porta = 1;
+
+            if (string.IsNullOrEmpty(nomeDoArquivo)) { arquivo = 0; }
+            if (string.IsNullOrEmpty(diretorioDoArquivo)) { diretorio = 0; }
+            if (btnSelecionarPorta.Text != "Desconectar") { porta = 0; }
+
+            List<string> mensagens = new List<string>();
+
+            if (arquivo == 0) { mensagens.Add("Informe um nome para o arquivo."); }
+            if (diretorio == 0) { mensagens.Add("Informe um diretório para o arquivo ser salvo."); }
+            if (porta == 0) { mensagens.Add("A porta de comunicação é inválida, confira se está selecionada corretamente."); }
+
+            if (mensagens.Count > 0)
             {
-                if (_portaSerial.IsOpen)
-                    _portaSerial.Write("b");
-            }
-
-            else if (string.IsNullOrEmpty(nomeDoArquivo) && string.IsNullOrEmpty(diretorioDoArquivo))
-                MessageBox.Show("  Informe um nome para o arquivo e o diretório para o arquivo ser salvo.", "Nome e caminho do arquivo", MessageBoxButtons.OK);
-
-
-            else if (string.IsNullOrEmpty(diretorioDoArquivo))
-            {
-                MessageBox.Show("  Informe um diretório para o arquivo ser salvo.", "Diretorio do arquivo", MessageBoxButtons.OK);
-
-                FolderBrowserDialog _definirDiretorio = new FolderBrowserDialog();
-
-                if (_definirDiretorio.ShowDialog() == DialogResult.OK)
-                    diretorioDoArquivo = _definirDiretorio.SelectedPath; //Colocando o endereço físico (caminho do arquivo texto)
+                string mensagemFinal = string.Join(Environment.NewLine, mensagens);
+                MessageBox.Show(mensagemFinal, "Não foi possivel concluir a ação", MessageBoxButtons.OK);
+                return;
             }
             else
-                MessageBox.Show("  Informe um nome para o arquivo", "Nome do arquivo", MessageBoxButtons.OK);
+            {
+
+                arquivoJaSalvo = false;
+
+                if (!_portaSerial.IsOpen)
+                {
+                    try
+                    {
+                        _portaSerial.Open();
+                        _portaSerial.DataReceived += IniciarLeituraPortaSerial;
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Erro ao abrir a porta serial: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                }
+
+                if (_portaSerial.IsOpen)
+                {
+                    _portaSerial.WriteLine("b");
+                    System.Threading.Thread.Sleep(3000);
+                    _portaSerial.WriteLine("d");
+                    _portaSerial.DiscardInBuffer();
+                    _portaSerial.DiscardOutBuffer();
+                    ativo = true;
+                    //_portaSerial.WriteLine("intervalo:" + ((intervalo.ToString()).Replace(".", "").Replace(",", "")));
+                    System.Threading.Thread.Sleep(30);
+                    _portaSerial.WriteLine("b");
+                }
+            }
         }
 
         private void BtnSelecionarPorta_Click(object sender, EventArgs e)
@@ -144,8 +287,10 @@ namespace Medidor_de_Temperatura
                     return;
 
                 }
+
                 if (_portaSerial.IsOpen)
                 {
+                    _portaSerial.DataReceived += IniciarLeituraPortaSerial;
                     btnSelecionarPorta.Text = "Desconectar";
                     cmbPortasSeriais.Enabled = false;
 
@@ -189,64 +334,39 @@ namespace Medidor_de_Temperatura
 
         private void IniciarLeituraPortaSerial(object sender, SerialDataReceivedEventArgs e)
         {
-            string leituraDaPortaSerial = (string)_portaSerial.ReadLine().Trim();
-            double valorLido = 0;
-            string[] numeroDePontosNaLeituraDaPortaSerial = leituraDaPortaSerial.Split('.');
-
-            if ((numeroDePontosNaLeituraDaPortaSerial.Length - 1) == 2)
+            if (ativo == true)
             {
-                leituraDaPortaSerial = leituraDaPortaSerial.Substring(leituraDaPortaSerial.IndexOf(".") + 2);
-                valorLido = Convert.ToDouble(leituraDaPortaSerial.Replace('.', ','));
-                valorLido += 130;
+                try
+                {
+                    string leituraDaPortaSerial = _portaSerial.ReadLine().Trim();
+                    double valorLido = 0;
 
+
+                    leituraDaPortaSerial = leituraDaPortaSerial.Replace(";", "");
+
+
+                    if (!string.IsNullOrEmpty(leituraDaPortaSerial))
+                    {
+
+                        valorLido = Convert.ToDouble(leituraDaPortaSerial.Replace('.', ','));
+
+                    }
+                    else
+                    {
+                        return;
+                    }
+
+                    ValoresDeTemperatura.Add(valorLido);
+                    ValoresDeTempo.Add(contadorDeSegundos);
+                    contadorDeSegundos += 1;
+
+                    GerarGrafico();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Erro na leitura serial: {ex.Message}");
+                }
             }
-
-            else if (leituraDaPortaSerial.Length >= 6 && leituraDaPortaSerial.Length <= 8)
-            {
-               
-                    leituraDaPortaSerial = leituraDaPortaSerial.Substring(0);
-                    string lpds = leituraDaPortaSerial.Replace(";", "");
-                    valorLido = Convert.ToDouble(lpds.Replace('.', ','));
-               
-            }
-
-            ValoresDeTemperatura.Add(valorLido);
-            ValoresDeTempo.Add(contadorDeSegundos);
-            contadorDeSegundos += 1;
-
-            Invoke
-            (
-                new MethodInvoker
-                (
-                  delegate ()
-                  {
-
-                      LineSeries? grafico = new LineSeries()
-                      {
-                          Color = OxyColors.Red,
-                          Title = $"Medidor de temperatura -  (°C/min)",
-                          StrokeThickness = 2,
-
-                      };
-
-                      for (int i = 0; i < ValoresDeTemperatura.Count; i++)
-                          grafico.Points.Add(new DataPoint(ValoresDeTempo[i] / 60, ValoresDeTemperatura[i]));  //o segredo é esse
-
-                      PlotModel? modeloDoGrafico = new PlotModel
-                      {
-                          Title = $"Gráfico de temperatura -  (°C/min) ",
-
-                      };
-
-                      modeloDoGrafico.Series.Add(grafico);
-                      pltvSpectra.Model = modeloDoGrafico;
-
-                  }
-                )
-            );
-
-
-
         }
 
         private void AtualizarListaDePortasSeriais()
@@ -280,44 +400,87 @@ namespace Medidor_de_Temperatura
 
         }
 
-        private static string DataFormatada()
+        private static string NomeArquivo()
         {
-
-            DateTime diaAtual = DateTime.Today;
-            string complementoDoNomeDoArquivo = string.Empty;
-
-            if (Convert.ToInt32(diaAtual.Day) < 10)
-                complementoDoNomeDoArquivo = complementoDoNomeDoArquivo + "0" + diaAtual.Day + "_";
-
-            else if (Convert.ToInt32(diaAtual.Day) > 10)
-                complementoDoNomeDoArquivo = complementoDoNomeDoArquivo + diaAtual.Day + "_";
-
-            if (Convert.ToInt32(diaAtual.Month) < 10)
-                complementoDoNomeDoArquivo = complementoDoNomeDoArquivo + "0" + diaAtual.Month;
-
-            else if (Convert.ToInt32(diaAtual.Month) > 10)
-                complementoDoNomeDoArquivo = complementoDoNomeDoArquivo + diaAtual.Month;
-
+            string complementoDoNomeDoArquivo = $"Temperatura_{DateTime.Now.ToString("dd_MM_yyyy__HH_mm")}";
             return complementoDoNomeDoArquivo;
         }
 
-
         private void FormularioPrincipal_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (_portaSerial.IsOpen == true)
-                _portaSerial.Write("d");
+            testeescrito();
+        }
 
-            using (StreamWriter _escrevarArquivo = new StreamWriter($@"{Environment.CurrentDirectory}\\{nomeDoArquivo}.txt"))
+        private void LimparGrafico()
+        {
+            Invoke(new MethodInvoker(delegate ()
             {
-                for (int i = 0; i < ValoresDeTemperatura.Count; i++)
-                    _escrevarArquivo.WriteLine($"{ValoresDeTemperatura[i]};{ValoresDeTempo[i]}\n");
-            }
+                pltvSpectra.Model = new PlotModel
+                {
+                    Title = "Gráfico limpo"
+                };
+                pltvSpectra.InvalidatePlot(true);
+            }));
+        }
 
-            if (_portaSerial.IsOpen == true)
-                _portaSerial.Close();
+        private void GerarGrafico()
+        {
+            Invoke(
+                    new MethodInvoker(
+                        delegate ()
+                        {
+                            LineSeries grafico = new LineSeries()
+                            {
+                                Color = OxyColors.Red,
+                                Title = $"Medidor de temperatura - (°C/min)",
+                                StrokeThickness = 2,
+                            };
+
+                            for (int i = 0; i < ValoresDeTemperatura.Count; i++)
+                                grafico.Points.Add(new DataPoint(((ValoresDeTempo[i] * (intervalo / 1000) / 60)), ValoresDeTemperatura[i]));
+
+                            PlotModel modeloDoGrafico = new PlotModel
+                            {
+                                Title = $"Gráfico de temperatura - (°C/min)",
+                            };
+
+                            modeloDoGrafico.Series.Add(grafico);
+                            pltvSpectra.Model = modeloDoGrafico;
+                        }
+                    )
+                );
         }
 
         #endregion Metodos
+
+        #region ElementosInterface
+        private void lblNomeDoArquivo_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBox2_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pltvSpectra_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        #endregion
+
 
     }
 }

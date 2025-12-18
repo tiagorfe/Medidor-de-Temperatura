@@ -16,9 +16,9 @@ namespace Medidor_de_Temperatura
         private PlotModel? ModeloDoPlot;
 
         private LineSeries temperaturaInicialSemAlteracao,
-                           temperaturaInicialComMenosUm, 
+                           temperaturaInicialComMenosUm,
                            temperaturaInicialComMaisUm, graficoEmFuncaoDoTempop;
-        
+
         private LinearAxis? eixoX, eixoY;
 
         public string linhaDoArquivoLido;
@@ -43,14 +43,14 @@ namespace Medidor_de_Temperatura
 
             ModeloDoPlot = new PlotModel();
 
-            temperaturaInicialComMenosUm   =   new LineSeries() { Title = "T = t + (T0 - 1)" };
-            temperaturaInicialComMaisUm    =   new LineSeries() { Title = "T = t + (T0 + 1)" };
-            temperaturaInicialSemAlteracao =   new LineSeries() { Title = "T = t + T0" };
-            graficoEmFuncaoDoTempop        =   new LineSeries() { Title = "Gráfico em função do tempo" };
+            temperaturaInicialComMenosUm = new LineSeries() { Title = "T = t + (T0 - 1)" };
+            temperaturaInicialComMaisUm = new LineSeries() { Title = "T = t + (T0 + 1)" };
+            temperaturaInicialSemAlteracao = new LineSeries() { Title = "T = t + T0" };
+            graficoEmFuncaoDoTempop = new LineSeries() { Title = "Gráfico em função do tempo" };
 
             valoresDeTemperatura = new List<double>();
             valoresDeTempo = new List<double>();
-                       
+
             eixoX = (new LinearAxis { Position = AxisPosition.Bottom, Minimum = 0, AbsoluteMinimum = 0, AbsoluteMaximum = 100, AxislineThickness = 12, Title = "tempo (min)" });
             eixoY = (new LinearAxis { Position = AxisPosition.Left, Minimum = 0, AbsoluteMinimum = 0, AbsoluteMaximum = 100, AxislineThickness = 12, Title = "temperatura (°C)" });
 
@@ -61,9 +61,9 @@ namespace Medidor_de_Temperatura
             ModeloDoPlot.Series.Add(temperaturaInicialComMenosUm);
             ModeloDoPlot.Series.Add(temperaturaInicialComMaisUm);
             ModeloDoPlot.Series.Add(graficoEmFuncaoDoTempop);
-            
+
             pltvSpectra.Model = ModeloDoPlot;
-            
+
             SelecionarArquivo();
         }
 
@@ -92,7 +92,7 @@ namespace Medidor_de_Temperatura
             {
                 arquivoSelecionado = _abrirArquivo.FileName;
                 ModeloDoPlot.Title = Path.GetFileNameWithoutExtension(_abrirArquivo.FileName);
-                
+
                 if (File.Exists(arquivoSelecionado))
                 {
                     using (StreamReader _leitorDeArquivo = new StreamReader(arquivoSelecionado))
@@ -101,8 +101,14 @@ namespace Medidor_de_Temperatura
                         {
                             if (linhaDoArquivoLido.Contains(";"))
                             {
-                                valoresDeTemperatura.Add(   Convert.ToDouble(linhaDoArquivoLido.Substring(0, linhaDoArquivoLido.LastIndexOf(";"))));
-                                valoresDeTempo.Add(         Convert.ToDouble(linhaDoArquivoLido.Substring(linhaDoArquivoLido.LastIndexOf(";") + 1)));
+                                string[] partes = linhaDoArquivoLido.Split(';');
+
+                                string temperaturaString = partes[0];
+                                double temperatura = double.Parse(temperaturaString);
+                                double tempo = TransformarEmNumero(partes[1]);
+
+                                valoresDeTemperatura.Add(temperatura);
+                                valoresDeTempo.Add(tempo);
                             }
                             else continue;
                         }
@@ -112,24 +118,57 @@ namespace Medidor_de_Temperatura
                 PlotDoGrafico();
 
             }
-          
+
         }
 
-       
+
+
         private void PlotDoGrafico()
         {
             temperaturaInicial = valoresDeTemperatura[0];
 
             for (int i = 0; i < valoresDeTempo.Count; i++)
             {
-                temperaturaInicialComMenosUm.Points.Add(    new DataPoint((valoresDeTempo[i] / 60), (valoresDeTempo[i] / 60) + (temperaturaInicial - 1)));
-                temperaturaInicialComMaisUm.Points.Add(     new DataPoint((valoresDeTempo[i] / 60), (valoresDeTempo[i] / 60) + (temperaturaInicial + 1)));
-                temperaturaInicialSemAlteracao.Points.Add(  new DataPoint((valoresDeTempo[i] / 60),  (valoresDeTempo[i] / 60) + temperaturaInicial));
-                graficoEmFuncaoDoTempop.Points.Add(         new DataPoint((valoresDeTempo[i] / 60), valoresDeTemperatura[i]));
+                temperaturaInicialComMenosUm.Points.Add(new DataPoint((valoresDeTempo[i]), (valoresDeTempo[i]) + (temperaturaInicial - 1)));
+                temperaturaInicialComMaisUm.Points.Add(new DataPoint((valoresDeTempo[i]), (valoresDeTempo[i]) + (temperaturaInicial + 1)));
+                temperaturaInicialSemAlteracao.Points.Add(new DataPoint((valoresDeTempo[i]), (valoresDeTempo[i]) + temperaturaInicial));
+                graficoEmFuncaoDoTempop.Points.Add(new DataPoint((valoresDeTempo[i]), valoresDeTemperatura[i]));
             }
+
+            eixoX.AbsoluteMaximum = valoresDeTempo.Max() + (valoresDeTempo.Max() /10);
+            eixoY.AbsoluteMaximum = valoresDeTemperatura.Max() + (valoresDeTemperatura.Max() / 4);
 
             ModeloDoPlot.ResetAllAxes();
             ModeloDoPlot.InvalidatePlot(true);
+        }
+        private double TransformarEmNumero(string Minuto)
+        {
+            double ValorGrafico = 0;
+            double Segundos;
+            double Minutos;
+
+            string[] partes = Minuto.Split(':');
+
+            double MinutoParte = double.Parse(partes[0]);
+            double SegundoParte = double.Parse(partes[1]);
+
+            if (SegundoParte > 0)
+            {
+                Segundos = SegundoParte / 5;
+                ValorGrafico += Segundos;
+            }
+
+            if (MinutoParte > 0)
+            {
+                Minutos = (MinutoParte * 60) / 5;
+                ValorGrafico += Minutos;
+            }
+
+
+            ValorGrafico *= 5;
+            ValorGrafico = ValorGrafico / 60;
+            return ValorGrafico;
+
         }
 
         #endregion Metodos

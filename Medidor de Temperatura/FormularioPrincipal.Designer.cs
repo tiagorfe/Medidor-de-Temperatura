@@ -41,18 +41,18 @@
             pltvSpectra = new OxyPlot.WindowsForms.PlotView();
             pnlGraficoExterno = new Panel();
             grpControles = new GroupBox();
+            lblIniciarAquisicao = new Label();
+            btnIniciarAquisicao = new Button();
             btnExibirFormularioDoGraficoComFuncoes = new Button();
             lblGraficoComEquacao = new Label();
+            lblNomeDoArquivo = new Label();
+            btnDefinirNomeDoArquivo = new Button();
             btnFinalizarComunicacao = new Button();
-            lblFinalizeAcquisition = new Label();
-            btnIniciarAquisicao = new Button();
-            lblIniciarAquisicao = new Label();
             btnDefinirDiretorioDoArquivo = new Button();
+            lblFinalizeAcquisition = new Label();
             txtDiretorioDefinidoDoArquivo = new TextBox();
             lblDefinirDiretorioDoArquivo = new Label();
-            btnDefinirNomeDoArquivo = new Button();
             txtNomeDoArquivo = new TextBox();
-            lblNomeDoArquivo = new Label();
             btnSelecionarPorta = new Button();
             cmbPortasSeriais = new ComboBox();
             lblSelecionarPortaSerial = new Label();
@@ -63,6 +63,7 @@
             tslblVazio = new ToolStripStatusLabel();
             tslblSalvarGrafico = new ToolStripStatusLabel();
             tmpTempo = new System.Windows.Forms.Timer(components);
+            timer1 = new System.Windows.Forms.Timer(components);
             pnlSuperior.SuspendLayout();
             pnlLiscomp.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)picLiscomp).BeginInit();
@@ -173,6 +174,7 @@
             pltvSpectra.ZoomHorizontalCursor = Cursors.SizeWE;
             pltvSpectra.ZoomRectangleCursor = Cursors.SizeNWSE;
             pltvSpectra.ZoomVerticalCursor = Cursors.SizeNS;
+            pltvSpectra.Click += pltvSpectra_Click;
             // 
             // pnlGraficoExterno
             // 
@@ -185,31 +187,50 @@
             // 
             // grpControles
             // 
+            grpControles.Controls.Add(lblIniciarAquisicao);
+            grpControles.Controls.Add(btnIniciarAquisicao);
             grpControles.Controls.Add(btnExibirFormularioDoGraficoComFuncoes);
             grpControles.Controls.Add(lblGraficoComEquacao);
+            grpControles.Controls.Add(lblNomeDoArquivo);
+            grpControles.Controls.Add(btnDefinirNomeDoArquivo);
             grpControles.Controls.Add(btnFinalizarComunicacao);
-            grpControles.Controls.Add(lblFinalizeAcquisition);
-            grpControles.Controls.Add(btnIniciarAquisicao);
-            grpControles.Controls.Add(lblIniciarAquisicao);
             grpControles.Controls.Add(btnDefinirDiretorioDoArquivo);
+            grpControles.Controls.Add(lblFinalizeAcquisition);
             grpControles.Controls.Add(txtDiretorioDefinidoDoArquivo);
             grpControles.Controls.Add(lblDefinirDiretorioDoArquivo);
-            grpControles.Controls.Add(btnDefinirNomeDoArquivo);
             grpControles.Controls.Add(txtNomeDoArquivo);
-            grpControles.Controls.Add(lblNomeDoArquivo);
             grpControles.Controls.Add(btnSelecionarPorta);
             grpControles.Controls.Add(cmbPortasSeriais);
             grpControles.Controls.Add(lblSelecionarPortaSerial);
-            grpControles.Location = new Point(12, 15);
+            grpControles.Location = new Point(12, 16);
             grpControles.Name = "grpControles";
-            grpControles.Size = new Size(291, 499);
+            grpControles.Size = new Size(291, 554);
             grpControles.TabIndex = 4;
             grpControles.TabStop = false;
             grpControles.Text = "Controles";
             // 
+            // lblIniciarAquisicao
+            // 
+            lblIniciarAquisicao.AutoSize = true;
+            lblIniciarAquisicao.Location = new Point(96, 338);
+            lblIniciarAquisicao.Name = "lblIniciarAquisicao";
+            lblIniciarAquisicao.Size = new Size(92, 15);
+            lblIniciarAquisicao.TabIndex = 11;
+            lblIniciarAquisicao.Text = "Iniciar aquisição";
+            // 
+            // btnIniciarAquisicao
+            // 
+            btnIniciarAquisicao.Location = new Point(12, 355);
+            btnIniciarAquisicao.Name = "btnIniciarAquisicao";
+            btnIniciarAquisicao.Size = new Size(261, 23);
+            btnIniciarAquisicao.TabIndex = 12;
+            btnIniciarAquisicao.Text = "Iniciar";
+            btnIniciarAquisicao.UseVisualStyleBackColor = true;
+            btnIniciarAquisicao.Click += BtnIniciarAquisicao_Click;
+            // 
             // btnExibirFormularioDoGraficoComFuncoes
             // 
-            btnExibirFormularioDoGraficoComFuncoes.Location = new Point(12, 462);
+            btnExibirFormularioDoGraficoComFuncoes.Location = new Point(12, 475);
             btnExibirFormularioDoGraficoComFuncoes.Name = "btnExibirFormularioDoGraficoComFuncoes";
             btnExibirFormularioDoGraficoComFuncoes.Size = new Size(261, 23);
             btnExibirFormularioDoGraficoComFuncoes.TabIndex = 16;
@@ -220,79 +241,25 @@
             // lblGraficoComEquacao
             // 
             lblGraficoComEquacao.AutoSize = true;
-            lblGraficoComEquacao.Location = new Point(59, 444);
+            lblGraficoComEquacao.Location = new Point(59, 457);
             lblGraficoComEquacao.Name = "lblGraficoComEquacao";
             lblGraficoComEquacao.Size = new Size(167, 15);
             lblGraficoComEquacao.TabIndex = 15;
             lblGraficoComEquacao.Text = "Gráfico com equação aplicada";
             // 
-            // btnFinalizarComunicacao
+            // lblNomeDoArquivo
             // 
-            btnFinalizarComunicacao.Location = new Point(12, 399);
-            btnFinalizarComunicacao.Name = "btnFinalizarComunicacao";
-            btnFinalizarComunicacao.Size = new Size(261, 23);
-            btnFinalizarComunicacao.TabIndex = 14;
-            btnFinalizarComunicacao.Text = "Finalizar";
-            btnFinalizarComunicacao.UseVisualStyleBackColor = true;
-            btnFinalizarComunicacao.Click += BtnFinalizarComunicacao_Click;
-            // 
-            // lblFinalizeAcquisition
-            // 
-            lblFinalizeAcquisition.AutoSize = true;
-            lblFinalizeAcquisition.Location = new Point(91, 382);
-            lblFinalizeAcquisition.Name = "lblFinalizeAcquisition";
-            lblFinalizeAcquisition.Size = new Size(103, 15);
-            lblFinalizeAcquisition.TabIndex = 13;
-            lblFinalizeAcquisition.Text = "Finalizar aquisição";
-            // 
-            // btnIniciarAquisicao
-            // 
-            btnIniciarAquisicao.Location = new Point(12, 339);
-            btnIniciarAquisicao.Name = "btnIniciarAquisicao";
-            btnIniciarAquisicao.Size = new Size(261, 23);
-            btnIniciarAquisicao.TabIndex = 12;
-            btnIniciarAquisicao.Text = "Iniciar";
-            btnIniciarAquisicao.UseVisualStyleBackColor = true;
-            btnIniciarAquisicao.Click += BtnIniciarAquisicao_Click;
-            // 
-            // lblIniciarAquisicao
-            // 
-            lblIniciarAquisicao.AutoSize = true;
-            lblIniciarAquisicao.Location = new Point(96, 322);
-            lblIniciarAquisicao.Name = "lblIniciarAquisicao";
-            lblIniciarAquisicao.Size = new Size(92, 15);
-            lblIniciarAquisicao.TabIndex = 11;
-            lblIniciarAquisicao.Text = "Iniciar aquisição";
-            // 
-            // btnDefinirDiretorioDoArquivo
-            // 
-            btnDefinirDiretorioDoArquivo.Location = new Point(12, 277);
-            btnDefinirDiretorioDoArquivo.Name = "btnDefinirDiretorioDoArquivo";
-            btnDefinirDiretorioDoArquivo.Size = new Size(261, 23);
-            btnDefinirDiretorioDoArquivo.TabIndex = 10;
-            btnDefinirDiretorioDoArquivo.Text = "Definir";
-            btnDefinirDiretorioDoArquivo.UseVisualStyleBackColor = true;
-            btnDefinirDiretorioDoArquivo.Click += BtnDefinirDiretorioDoArquivo_Click;
-            // 
-            // txtDiretorioDefinidoDoArquivo
-            // 
-            txtDiretorioDefinidoDoArquivo.Location = new Point(12, 247);
-            txtDiretorioDefinidoDoArquivo.Name = "txtDiretorioDefinidoDoArquivo";
-            txtDiretorioDefinidoDoArquivo.Size = new Size(260, 23);
-            txtDiretorioDefinidoDoArquivo.TabIndex = 9;
-            // 
-            // lblDefinirDiretorioDoArquivo
-            // 
-            lblDefinirDiretorioDoArquivo.AutoSize = true;
-            lblDefinirDiretorioDoArquivo.Location = new Point(63, 227);
-            lblDefinirDiretorioDoArquivo.Name = "lblDefinirDiretorioDoArquivo";
-            lblDefinirDiretorioDoArquivo.Size = new Size(159, 15);
-            lblDefinirDiretorioDoArquivo.TabIndex = 8;
-            lblDefinirDiretorioDoArquivo.Text = "Definir diretório da aquisição";
+            lblNomeDoArquivo.AutoSize = true;
+            lblNomeDoArquivo.Location = new Point(91, 246);
+            lblNomeDoArquivo.Name = "lblNomeDoArquivo";
+            lblNomeDoArquivo.Size = new Size(102, 15);
+            lblNomeDoArquivo.TabIndex = 6;
+            lblNomeDoArquivo.Text = "Nome do Arquivo";
+            lblNomeDoArquivo.Click += lblNomeDoArquivo_Click;
             // 
             // btnDefinirNomeDoArquivo
             // 
-            btnDefinirNomeDoArquivo.Location = new Point(12, 179);
+            btnDefinirNomeDoArquivo.Location = new Point(12, 294);
             btnDefinirNomeDoArquivo.Name = "btnDefinirNomeDoArquivo";
             btnDefinirNomeDoArquivo.Size = new Size(261, 23);
             btnDefinirNomeDoArquivo.TabIndex = 4;
@@ -300,25 +267,61 @@
             btnDefinirNomeDoArquivo.UseVisualStyleBackColor = true;
             btnDefinirNomeDoArquivo.Click += BtnDefinirNomeDoArquivo_Click;
             // 
+            // btnFinalizarComunicacao
+            // 
+            btnFinalizarComunicacao.Location = new Point(12, 412);
+            btnFinalizarComunicacao.Name = "btnFinalizarComunicacao";
+            btnFinalizarComunicacao.Size = new Size(261, 23);
+            btnFinalizarComunicacao.TabIndex = 14;
+            btnFinalizarComunicacao.Text = "Finalizar";
+            btnFinalizarComunicacao.UseVisualStyleBackColor = true;
+            btnFinalizarComunicacao.Click += BtnFinalizarComunicacao_Click;
+            // 
+            // btnDefinirDiretorioDoArquivo
+            // 
+            btnDefinirDiretorioDoArquivo.Location = new Point(12, 205);
+            btnDefinirDiretorioDoArquivo.Name = "btnDefinirDiretorioDoArquivo";
+            btnDefinirDiretorioDoArquivo.Size = new Size(261, 23);
+            btnDefinirDiretorioDoArquivo.TabIndex = 10;
+            btnDefinirDiretorioDoArquivo.Text = "Definir";
+            btnDefinirDiretorioDoArquivo.UseVisualStyleBackColor = true;
+            btnDefinirDiretorioDoArquivo.Click += BtnDefinirDiretorioDoArquivo_Click;
+            // 
+            // lblFinalizeAcquisition
+            // 
+            lblFinalizeAcquisition.AutoSize = true;
+            lblFinalizeAcquisition.Location = new Point(91, 395);
+            lblFinalizeAcquisition.Name = "lblFinalizeAcquisition";
+            lblFinalizeAcquisition.Size = new Size(103, 15);
+            lblFinalizeAcquisition.TabIndex = 13;
+            lblFinalizeAcquisition.Text = "Finalizar aquisição";
+            // 
+            // txtDiretorioDefinidoDoArquivo
+            // 
+            txtDiretorioDefinidoDoArquivo.Location = new Point(13, 176);
+            txtDiretorioDefinidoDoArquivo.Name = "txtDiretorioDefinidoDoArquivo";
+            txtDiretorioDefinidoDoArquivo.Size = new Size(260, 23);
+            txtDiretorioDefinidoDoArquivo.TabIndex = 9;
+            // 
+            // lblDefinirDiretorioDoArquivo
+            // 
+            lblDefinirDiretorioDoArquivo.AutoSize = true;
+            lblDefinirDiretorioDoArquivo.Location = new Point(63, 158);
+            lblDefinirDiretorioDoArquivo.Name = "lblDefinirDiretorioDoArquivo";
+            lblDefinirDiretorioDoArquivo.Size = new Size(159, 15);
+            lblDefinirDiretorioDoArquivo.TabIndex = 8;
+            lblDefinirDiretorioDoArquivo.Text = "Definir diretório da aquisição";
+            // 
             // txtNomeDoArquivo
             // 
-            txtNomeDoArquivo.Location = new Point(12, 150);
+            txtNomeDoArquivo.Location = new Point(12, 264);
             txtNomeDoArquivo.Name = "txtNomeDoArquivo";
             txtNomeDoArquivo.Size = new Size(260, 23);
             txtNomeDoArquivo.TabIndex = 7;
             // 
-            // lblNomeDoArquivo
-            // 
-            lblNomeDoArquivo.AutoSize = true;
-            lblNomeDoArquivo.Location = new Point(91, 132);
-            lblNomeDoArquivo.Name = "lblNomeDoArquivo";
-            lblNomeDoArquivo.Size = new Size(102, 15);
-            lblNomeDoArquivo.TabIndex = 6;
-            lblNomeDoArquivo.Text = "Nome do Arquivo";
-            // 
             // btnSelecionarPorta
             // 
-            btnSelecionarPorta.Location = new Point(12, 93);
+            btnSelecionarPorta.Location = new Point(12, 110);
             btnSelecionarPorta.Name = "btnSelecionarPorta";
             btnSelecionarPorta.Size = new Size(260, 23);
             btnSelecionarPorta.TabIndex = 4;
@@ -329,7 +332,7 @@
             // cmbPortasSeriais
             // 
             cmbPortasSeriais.FormattingEnabled = true;
-            cmbPortasSeriais.Location = new Point(12, 64);
+            cmbPortasSeriais.Location = new Point(12, 81);
             cmbPortasSeriais.Name = "cmbPortasSeriais";
             cmbPortasSeriais.Size = new Size(260, 23);
             cmbPortasSeriais.TabIndex = 5;
@@ -337,7 +340,7 @@
             // lblSelecionarPortaSerial
             // 
             lblSelecionarPortaSerial.AutoSize = true;
-            lblSelecionarPortaSerial.Location = new Point(48, 43);
+            lblSelecionarPortaSerial.Location = new Point(48, 60);
             lblSelecionarPortaSerial.Name = "lblSelecionarPortaSerial";
             lblSelecionarPortaSerial.Size = new Size(188, 15);
             lblSelecionarPortaSerial.TabIndex = 4;
@@ -356,9 +359,9 @@
             // 
             pnlControles.Controls.Add(lblDesenvolvedores);
             pnlControles.Controls.Add(grpControles);
-            pnlControles.Location = new Point(0, 129);
+            pnlControles.Location = new Point(0, 113);
             pnlControles.Name = "pnlControles";
-            pnlControles.Size = new Size(317, 527);
+            pnlControles.Size = new Size(317, 656);
             pnlControles.TabIndex = 3;
             // 
             // stsDesenvolvedores
@@ -380,7 +383,7 @@
             // tslblVazio
             // 
             tslblVazio.Name = "tslblVazio";
-            tslblVazio.Size = new Size(679, 17);
+            tslblVazio.Size = new Size(710, 17);
             tslblVazio.Spring = true;
             // 
             // tslblSalvarGrafico
@@ -394,6 +397,10 @@
             // tmpTempo
             // 
             tmpTempo.Tick += TmpTempo_Tick;
+            // 
+            // timer1
+            // 
+            timer1.Tick += timer1_Tick;
             // 
             // FormularioPrincipal
             // 
@@ -461,5 +468,6 @@
         private OxyPlot.WindowsForms.PlotView pltvSpectra;
         private ToolStripStatusLabel tslblVazio;
         private ToolStripStatusLabel tslblSalvarGrafico;
+        private System.Windows.Forms.Timer timer1;
     }
 }
